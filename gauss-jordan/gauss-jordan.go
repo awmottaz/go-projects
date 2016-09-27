@@ -73,10 +73,4 @@ func main() {
 
 	fmt.Println()
 	fmt.Print(b)
-
-	// strA, _ := in.ReadString('\n')
-
-	// // Parse strA into a matrix
-	// arr := strings.Fields(strA)
-	// fmt.Println(arr[0])
 }
