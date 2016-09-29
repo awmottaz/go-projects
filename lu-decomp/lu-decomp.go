@@ -7,7 +7,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/mitchellh/go-wordwrap"
 	"github.com/nsf/termbox-go"
 )
@@ -15,7 +17,7 @@ import (
 var in = bufio.NewReader(os.Stdin)
 
 func main() {
-	fmt.Println("Compute a solution to Ax = b.\n")
+	fmt.Println("Find the L-U decomposition of a matrix A.\n")
 
 	// Get terminal width
 	if err := termbox.Init(); err != nil {
@@ -39,9 +41,8 @@ func main() {
 	r1 := strings.Fields(row)
 	n := len(r1)
 
-	// Initialize matrix A and vector b
+	// Initialize matrix A
 	A := make([][]float64, n)
-	b := make([]float64, n)
 
 	// Add the first row
 	for _, num := range r1 {
@@ -80,24 +81,15 @@ func main() {
 		fmt.Println()
 	}
 
-	fmt.Print("\n Now enter your matrix b as a row vector.\n\n")
+	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+	s.Suffix = " Calculating decomposition..."
+	s.Start()
 
-	fmt.Print("b = ")
-	bin, _ := in.ReadString('\n')
-	binarr := strings.Fields(bin)
-	if len(binarr) != n {
-		panic("Length doesn't match! Quitting...")
-	}
-
-	for i := 0; i < n; i++ {
-		if val, e := strconv.ParseFloat(binarr[i], 64); e == nil {
-			b[i] = val
+	for row, data := range A {
+		for col, elem := range data {
+			// Insert code here
 		}
 	}
 
-	MakeMultiplierArray(A, n)
-}
-
-func MakeMultiplierArray(mat, size float64) [][]float64 {
-
+	s.Stop()
 }
