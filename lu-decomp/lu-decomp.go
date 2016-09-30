@@ -43,6 +43,7 @@ func main() {
 
 	// Initialize matrix A
 	A := make([][]float64, n)
+	LU := Zeros(n)
 
 	// Add the first row
 	for _, num := range r1 {
@@ -69,9 +70,51 @@ func main() {
 	fmt.Println()
 
 	// Show the user what they entered for A
-	for ind, mrow := range A {
-		if math.Ceil(float64(n)/float64(2)) == float64(ind+1) {
-			fmt.Print("A =\t")
+	PrintArray(A, n, "A") // PrintArray(arr, size, name)
+
+	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+	s.Suffix = " Calculating decomposition..."
+	s.Start()
+
+	for row, data := range A {
+		for col, elem := range data {
+			var sum float64
+			var newVal float64
+			if row <= col {
+				for i := 0; i < row; i++ {
+					sum += LU[row][i] * LU[i][col]
+				}
+				newVal = elem - sum
+			} else {
+				for i := 0; i < col; i++ {
+					sum += LU[row][i] * LU[i][col]
+				}
+				newVal = (elem - sum) / LU[col][col]
+			}
+			LU[row][col] = newVal
+		}
+	}
+
+	s.Stop()
+
+	fmt.Println("The resulting L-U decomposition is combined into a single array:\n")
+	PrintArray(LU, n, "L-U")
+}
+
+func Zeros(size int) [][]float64 {
+	arr := make([][]float64, size)
+	for i := 0; i < size; i++ {
+		for j := 0; j < size; j++ {
+			arr[i] = append(arr[i], 0)
+		}
+	}
+	return arr
+}
+
+func PrintArray(arr [][]float64, size int, name string) {
+	for ind, mrow := range arr {
+		if math.Ceil(float64(size)/float64(2)) == float64(ind+1) {
+			fmt.Print(name, " =\t")
 		} else {
 			fmt.Print("\t")
 		}
@@ -80,16 +123,4 @@ func main() {
 		}
 		fmt.Println()
 	}
-
-	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-	s.Suffix = " Calculating decomposition..."
-	s.Start()
-
-	for row, data := range A {
-		for col, elem := range data {
-			// Insert code here
-		}
-	}
-
-	s.Stop()
 }
