@@ -15,33 +15,34 @@ import (
 )
 
 var in = bufio.NewReader(os.Stdin)
+var instructions = "----------------------------------\n" +
+	"Find solutions to Ax = b\n" +
+	"----------------------------------\n\n" +
+	"Please enter your matrix A.\n" +
+	"This is accomplished by entering one row at a time, separating numbers with a space. " +
+	"When finished with a row, hit the [RETURN] key. " +
+	"This program takes only square matrices for A. " +
+	"It will count the number of elements in row 1 and automatically " +
+	"stop taking input after you have entered that many rows. " +
+	"For example:\n\n row 1: 1 2 3 [RETURN] \n row 2: 4 5 6 [RETURN] \n row 3: 7 8 9 [RETURN]\n\n"
 
 func main() {
-	fmt.Println("Find the L-U decomposition of a matrix A.\n")
-
-	// Get terminal width
+	// Get terminal width and set text wrap
 	if err := termbox.Init(); err != nil {
 		panic(err)
 	}
 	w, _ := termbox.Size()
 	termbox.Close()
 	width := uint(math.Min(float64(w), float64(80)))
-
-	instructions := "Please enter your matrix A.\n" +
-		"This is accomplished by entering one row at a time, separating numbers with a space. " +
-		"When finished with a row, hit the [RETURN] key. " +
-		"This program takes only square matrices for A. " +
-		"It will count the number of elements in row 1 and automatically " +
-		"stop taking input after you have entered that many rows. " +
-		"For example:\n\n row 1: 1 2 3 [RETURN] \n row 2: 4 5 6 [RETURN] \n row 3: 7 8 9 [RETURN]\n\n"
 	fmt.Print(wordwrap.WrapString(instructions, width))
 
+	// Get the first row of the matrix
 	fmt.Print("row 1: ")
 	row, _ := in.ReadString('\n')
 	r1 := strings.Fields(row)
 	n := len(r1)
 
-	// Initialize matrix A
+	// Initialize matrices and vectors
 	A := make([][]float64, n)
 	b := make([]float64, n)
 	x := make([]float64, n)
@@ -52,13 +53,13 @@ func main() {
 	for _, num := range r1 {
 		if val, e := strconv.ParseFloat(num, 64); e == nil {
 			A[0] = append(A[0], val)
+		} else {
+			panic(e)
 		}
 	}
 	// Now add the rest
 	for i := 1; i < n; i++ {
-		fmt.Print("row ")
-		fmt.Print(i + 1)
-		fmt.Print(": ")
+		fmt.Print("row ", i+1, ": ")
 		row, _ = in.ReadString('\n')
 		if len(strings.Fields(row)) != n {
 			panic("Invalid row! Quitting...")
@@ -66,6 +67,8 @@ func main() {
 		for _, num := range strings.Fields(row) {
 			if val, e := strconv.ParseFloat(num, 64); e == nil {
 				A[i] = append(A[i], val)
+			} else {
+				panic(e)
 			}
 		}
 	}
@@ -79,19 +82,24 @@ func main() {
 	for i, num := range strings.Fields(temp) {
 		if val, e := strconv.ParseFloat(num, 64); e == nil {
 			b[i] = val
+		} else {
+			panic(e)
 		}
 	}
 
 	// Show the user what they entered for A
+	fmt.Println("\n#############################################\nOkay, solving Ax = b where")
 	PrintArray(A, n, "A") // PrintArray(arr, size, name)
-	fmt.Print("b = ", b, "\n")
+	fmt.Print("and\nb = ", b, "\n\n")
 
+	// For long calculations, show a spinner so user doesn't think the program crashed
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
 	s.Suffix = " Calculating decomposition..."
 	s.Start()
 
-	for row, data := range A {
-		for col, elem := range data {
+	// Calculate the L-U decomposition of A
+	for row, rowData := range A {
+		for col, elem := range rowData {
 			var sum float64
 			var newVal float64
 			if row <= col {
@@ -110,25 +118,24 @@ func main() {
 	}
 
 	// Solve Ly = b for y
-	for i := 0; i < n; i++ {
+	for row := 0; row < n; row++ {
 		var sum float64
-		sum = 0.0
-		for j := 0; j < i; j++ {
-			sum = sum + LU[i][j]*b[j]
+		for col := 0; col < row; col++ {
+			sum = sum + LU[row][col]*b[col]
 		}
-		y[i] = b[i] - sum
+		y[row] = b[row] - sum
 	}
+
 	// Solve Ux = y for x
-	for i := n - 1; i >= 0; i-- {
+	for row := n - 1; row >= 0; row-- {
 		var sum float64
-		sum = 0.0
-		for j := n - 1; j > i; j-- {
-			sum = sum + LU[i][j]*x[j]
+		for col := n - 1; col > row; col-- {
+			sum = sum + LU[row][col]*x[col]
 		}
-		x[i] = (y[i] - sum) / LU[i][i]
+		x[row] = (y[row] - sum) / LU[row][row]
 	}
 	s.Stop()
-	fmt.Print("x: ", x)
+	fmt.Print("Solution: x = ", x)
 }
 
 func Zeros(size int) [][]float64 {
