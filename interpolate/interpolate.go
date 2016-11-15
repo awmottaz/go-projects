@@ -21,8 +21,8 @@ func interpolate(functionFlag int, leftEndPoint, rightEndPoint float64, numPoint
 		}
 	}
 	fmt.Print("p(x) = ")
-	printPolynomial(coeffs)
-	fmt.Print("\nError = ", calculateError(functionFlag, coeffs, leftEndPoint, rightEndPoint, numErrorSamples), "\n\n")
+	printPolynomial(xVals, coeffs)
+	fmt.Print("\nError = ", calculateError(functionFlag, xVals, coeffs, leftEndPoint, rightEndPoint, numErrorSamples), "\n\n")
 }
 
 func generateInitialConditions(functionFlag int, leftEndPoint, rightEndPoint float64, numPoints int) ([]float64, []float64) {
@@ -47,35 +47,43 @@ func evaluateTestFunction(functionFlag int, point float64) float64 {
 	}
 }
 
-func evaluatePolynomial(coeffs []float64, point float64) float64 {
+func evaluatePolynomial(xVals, coeffs []float64, point float64) float64 {
 	var degree = len(coeffs) - 1
 	var result = float64(0)
 	for i := 0; i <= degree; i++ {
-		result += coeffs[i] * math.Pow(point, float64(i))
+		var product = float64(1)
+		for j := 0; j < i; j++ {
+			product *= point - xVals[j]
+		}
+		result += coeffs[i] * product
 	}
 	return result
 }
 
-func printPolynomial(coeffs []float64) {
+func printPolynomial(xVals, coeffs []float64) {
 	var degree = len(coeffs) - 1
-	fmt.Print(coeffs[0])
+	fmt.Printf("%f", coeffs[0])
 	for i := 1; i <= degree; i++ {
 		if coeffs[i] < 0 {
 			fmt.Print(" - ")
 		} else {
 			fmt.Print(" + ")
 		}
-		fmt.Printf("%f", math.Abs(coeffs[i]))
-		fmt.Print("x^", i)
+		fmt.Print(math.Abs(coeffs[i]))
+		for j := 0; j < i; j++ {
+			fmt.Print("(x - ")
+			fmt.Printf("%f", xVals[j])
+			fmt.Print(")")
+		}
 	}
 }
 
-func calculateError(functionFlag int, coeffs []float64, leftEndPoint, rightEndPoint float64, samples int) float64 {
+func calculateError(functionFlag int, xVals, coeffs []float64, leftEndPoint, rightEndPoint float64, samples int) float64 {
 	var deltaX = (rightEndPoint - leftEndPoint) / float64(samples)
 	var error = float64(0)
 	for i := 0; i <= samples; i++ {
 		point := leftEndPoint + (float64(i)*deltaX)
-		absoluteDiff := math.Abs(evaluateTestFunction(functionFlag, point) - evaluatePolynomial(coeffs, point))
+		absoluteDiff := math.Abs(evaluateTestFunction(functionFlag, point) - evaluatePolynomial(xVals, coeffs, point))
 		error = math.Max(error, absoluteDiff)
 	}
 	return error
